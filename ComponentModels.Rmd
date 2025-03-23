@@ -1,0 +1,240 @@
+---
+title: "Final Analysis"
+author: "Shane Hansen"
+date: "2025-03-16"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+#load packages
+library(readxl)
+library(dplyr)
+library(mgcv)
+library(emmeans)
+library(ggplot2)
+```
+
+```{r}
+#load and process data
+
+model_data <- read_excel("model_data.xlsx")
+
+#factors
+model_data$Language <- as.factor(model_data$Language)
+model_data$Character <- as.factor(model_data$Character)
+model_data$Acceptability <- as.factor(model_data$Acceptability)
+model_data$subject <- as.factor(model_data$subject)
+model_data$item <- as.factor(model_data$item)
+model_data$chlabel <- as.factor(model_data$chlabel)
+model_data$session <- as.factor(model_data$session)
+
+#numerics
+model_data$secs_cen <- as.numeric(model_data$secs_cen)
+model_data$sp3d_cen <- as.numeric(model_data$sp3d_cen)
+model_data$iat_cen <- as.numeric(model_data$iat_cen)
+model_data$cq_d_cen <- as.numeric(model_data$cq_d_cen)
+
+#subsetting
+midline_data <- subset(model_data, chlabel %in% c("Fz","Cz","Pz"))
+fz_data <- subset(midline_data, chlabel == "Fz")
+cz_data <- subset(midline_data, chlabel == "Cz")
+pz_data <- subset(midline_data, chlabel == "Pz")
+```
+
+```{r}
+#200 model
+
+p200_model <- bam(amp200 ~ Language*Character*Acceptability*session +
+                    s(subject, bs = "re")+
+                    s(item, bs = "re"),
+                  data = fz_data,
+                  samfrac = 0.1,
+                  method = "REML",
+                  gc.level = 2)
+summary(p200_model)
+
+```
+
+```{r}
+#200 analysis
+emmip(p200_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "P200 Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))+
+  scale_x_discrete(labels = c("Cisgender" = "Cis", "Nonbinary" = "NB", "Plural" = "Plu"))
+p200_emm <- emmeans(p200_model, ~Language*Character*Acceptability*session)
+pairs(p200_emm, simple = "Acceptability")
+pairs(p200_emm, simple = "Character")
+```
+
+
+```{r}
+#300 model
+p300_model <- bam(amp300 ~ Language*Character*Acceptability*session +
+                    s(subject, bs = "re")+
+                    s(item, bs = "re"),
+                  data = cz_data,
+                  samfrac = 0.1,
+                  method = "REML",
+                  gc.level = 2)
+summary(p300_model)
+
+```
+
+```{r}
+#300 analysis
+emmip(p300_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "P300 Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))+
+  scale_x_discrete(labels = c("Cisgender" = "Cis", "Nonbinary" = "NB", "Plural" = "Plu"))
+p300_emm <- emmeans(p300_model, ~Language*Character*Acceptability*session)
+pairs(p300_emm, simple = "Acceptability")
+pairs(p300_emm, simple = "Character")
+
+```
+
+
+```{r}
+#400 model
+n400_model <- bam(amp400 ~ Language*Character*Acceptability*session +
+                    s(subject, bs = "re")+
+                    s(item, bs = "re"),
+                  data = cz_data,
+                  samfrac = 0.1,
+                  method = "REML",
+                  gc.level = 2)
+summary(n400_model)
+```
+
+```{r}
+#400 analysis
+emmip(n400_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "N400 Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))+
+  scale_x_discrete(labels = c("Cisgender" = "Cis", "Nonbinary" = "NB", "Plural" = "Plu"))
+n400_emm <- emmeans(n400_model, ~Language*Character*Acceptability*session)
+pairs(n400_emm, simple = "Acceptability")
+pairs(n400_emm, simple = "Character")
+```
+
+
+```{r}
+#600 model (p6a)
+p600_model <- bam(amp600 ~ Language*Character*Acceptability*session +
+                    s(subject, bs = "re")+
+                    s(item, bs = "re"),
+                  data = pz_data,
+                  samfrac = 0.1,
+                  method = "REML",
+                  gc.level = 2)
+summary(p600_model)
+```
+
+```{r}
+#p6a analysis
+emmip(p600_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "P6a Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))
+p600_emm <- emmeans(p600_model, ~Language*Character*Acceptability*session)
+pairs(p600_emm, simple = "Acceptability")
+pairs(p600_emm, simple = "Character")
+```
+
+
+```{r}
+#800 model (p6b)
+p800_model <- bam(amp800 ~ Language*Character*Acceptability*session +
+                    s(subject, bs = "re")+
+                    s(item, bs = "re"),
+                  data = pz_data,
+                  samfrac = 0.1,
+                  method = "REML",
+                  gc.level = 2)
+summary(p800_model)
+
+```
+
+```{r}
+#p6b analysis
+emmip(p800_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "P6b Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))+
+  scale_x_discrete(labels = c("Cisgender" = "Cis", "Nonbinary" = "NB", "Plural" = "Plu"))
+p800_emm <- emmeans(p800_model, ~Language*Character*Acceptability*session)
+pairs(p800_emm, simple = "Acceptability")
+pairs(p800_emm, simple = "Character")
+```
+
+
+```{r}
+#nref model
+nref_model <- bam(amp800 ~ Language*Character*Acceptability*session +
+                    s(subject, bs = "re")+
+                    s(item, bs = "re"),
+                  data = fz_data,
+                  samfrac = 0.1,
+                  method = "REML",
+                  gc.level = 2)
+summary(p800_model)
+```
+
+```{r}
+#nref analysis
+emmip(nref_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "Nref Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))+
+  scale_x_discrete(labels = c("Cisgender" = "Cis", "Nonbinary" = "NB", "Plural" = "Plu"))
+nref_emm <- emmeans(nref_model, ~Language*Character*Acceptability*session)
+pairs(nref_emm, simple = "Acceptability")
+pairs(nref_emm, simple = "Character")
+
+```
+
+
+```{r}
+#emmips
+emmip(p200_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "P200 Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue")) +
+  scale_x_discrete(labels = c("Cisgender" = "C", "Nonbinary" = "NB", "Plural" = "P")) 
+emmip(p300_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "P300 Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))+
+  scale_x_discrete(labels = c("Cisgender" = "C", "Nonbinary" = "NB", "Plural" = "P")) 
+emmip(n400_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "P400 Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))+
+  scale_x_discrete(labels = c("Cisgender" = "C", "Nonbinary" = "NB", "Plural" = "P")) 
+emmip(p600_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "P6a Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))+
+  scale_x_discrete(labels = c("Cisgender" = "C", "Nonbinary" = "NB", "Plural" = "P")) 
+emmip(p800_model, Acceptability~Character | Language:session, CI = TRUE, facetlab = "label_both") + 
+  labs(title = "P6b Window") +
+  scale_color_manual(values = c("Unacceptable" = "red", "Acceptable" = "blue"))+
+  scale_x_discrete(labels = c("Cisgender" = "C", "Nonbinary" = "NB", "Plural" = "P")) 
+```
+
+```{r}
+#contrasts
+pairs(p200_emm, simple = "Acceptability")
+```
+
+```{r}
+pairs(p300_emm, simple = "Acceptability")
+```
+
+```{r}
+pairs(n400_emm, simple = "Acceptability")
+```
+
+```{r}
+pairs(p600_emm, simple = "Acceptability")
+```
+
+```{r}
+pairs(p800_emm, simple = "Acceptability")
+```
+
+
